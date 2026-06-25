@@ -1,0 +1,73 @@
+{
+  "name": "dev-assistant-tool",
+  "version": "1.0.0",
+  "description": "开发辅助工具桌面应用",
+  "main": "electron/main.js",
+  "scripts": {
+    "start": "npm run build:vue && electron --disable-gpu --disable-gpu-compositing --disable-gpu-sandbox --disable-features=VizDisplayCompositor .",
+    "dev": "node scripts/dev.js",
+    "dev:vue": "vite --host 127.0.0.1 --port 5173 --strictPort",
+    "build:vue": "vite build",
+    "generate:icon": "node scripts/generate-icon.mjs",
+    "build": "npm run build:vue && npm run generate:icon && node scripts/electron-build.mjs",
+    "build:dir": "npm run build:vue && electron-builder --win --dir"
+  },
+  "keywords": [
+    "electron",
+    "toolbox",
+    "productivity",
+    "dev-tools"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@element-plus/icons-vue": "^2.3.2",
+    "element-plus": "^2.14.2",
+    "vue": "^3.5.38",
+    "vue-router": "^4.6.4"
+  },
+  "build": {
+    "appId": "com.devassistant.tool",
+    "productName": "开发辅助工具",
+    "directories": {
+      "output": "dist-release"
+    },
+    "files": [
+      "electron/**/*",
+      "web/**/*",
+      "app.rules.config.json",
+      "package.json"
+    ],
+    "win": {
+      "icon": "electron/assets/app-icon.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "signAndEditExecutable": false
+    },
+    "afterPack": "./scripts/embed-icon.cjs",
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "shortcutName": "开发辅助工具"
+    },
+    "electronDownload": {
+      "mirror": "https://npmmirror.com/mirrors/electron/"
+    }
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^6.0.7",
+    "electron": "^35.0.0",
+    "electron-builder": "^25.1.8",
+    "png-to-ico": "^3.0.1",
+    "rcedit": "^5.0.1",
+    "sass": "^1.101.0",
+    "vite": "^8.0.16"
+  }
+}

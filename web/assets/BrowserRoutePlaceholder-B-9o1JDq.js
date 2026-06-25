@@ -1,0 +1,1 @@
+import{m as e,z as t}from"./runtime-core.esm-bundler-GUbWTbjV.js";var n={class:`browser-route-placeholder`,"aria-hidden":`true`},r=Object.assign({name:`BrowserRoutePlaceholder`},{__name:`BrowserRoutePlaceholder`,setup(r){return(r,i)=>(t(),e(`div`,n))}});export{r as default};

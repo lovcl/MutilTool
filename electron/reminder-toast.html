@@ -1,0 +1,745 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>提醒</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --border: rgba(255, 255, 255, 0.12);
+        --text: #f8fafc;
+        --muted: #c5d0de;
+        --accent: #3b8cff;
+        --accent-strong: #60a5fa;
+        --accent-soft: rgba(59, 140, 255, 0.22);
+        --card-bg: linear-gradient(165deg, #3a4354 0%, #2a3140 52%, #222833 100%);
+        --hero-bg: radial-gradient(circle at 20% 20%, rgba(59, 140, 255, 0.28), transparent 58%);
+        --hero-icon-bg: rgba(59, 140, 255, 0.18);
+        --hero-icon-color: #93c5fd;
+        --badge-bg: rgba(59, 140, 255, 0.16);
+        --badge-color: #bfdbfe;
+        --meta-bg: rgba(255, 255, 255, 0.05);
+        --button-primary-bg: rgba(59, 140, 255, 0.24);
+        --button-primary-color: #dbeafe;
+        --button-primary-hover: rgba(59, 140, 255, 0.34);
+        --danger-soft: rgba(229, 72, 77, 0.18);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: transparent;
+        font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      }
+
+      .toast-card {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        padding: 0;
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        background: var(--card-bg);
+        box-shadow: 0 20px 48px rgba(0, 0, 0, 0.32);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      .toast-hero {
+        position: relative;
+        min-height: 78px;
+        padding: 14px 14px 10px;
+        background: var(--hero-bg);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .toast-hero::after {
+        content: "";
+        position: absolute;
+        inset: auto -20px -28px auto;
+        width: 96px;
+        height: 96px;
+        border-radius: 50%;
+        background: var(--hero-glow, transparent);
+        pointer-events: none;
+      }
+
+      .toast-hero-icon {
+        position: relative;
+        z-index: 1;
+        width: 52px;
+        height: 52px;
+        flex: 0 0 auto;
+        display: grid;
+        place-items: center;
+        border-radius: 16px;
+        background: var(--hero-icon-bg);
+        color: var(--hero-icon-color);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      }
+
+      .toast-hero-icon svg {
+        width: 28px;
+        height: 28px;
+        fill: currentColor;
+        stroke: currentColor;
+      }
+
+      .toast-hero-copy {
+        position: relative;
+        z-index: 1;
+        min-width: 0;
+        flex: 1;
+      }
+
+      .toast-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 3px 8px;
+        border-radius: 999px;
+        background: var(--badge-bg);
+        color: var(--badge-color);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        margin-bottom: 4px;
+      }
+
+      .toast-hero-title {
+        margin: 0;
+        color: var(--text);
+        font-size: 16px;
+        font-weight: 800;
+        line-height: 1.25;
+      }
+
+      .toast-hero-time {
+        margin: 4px 0 0;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.3;
+      }
+
+      .toast-main {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        padding: 12px 14px 10px;
+        flex: 1;
+        min-height: 0;
+      }
+
+      .toast-header-actions {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        z-index: 2;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .toast-snooze {
+        padding: 5px 8px;
+        border: 0;
+        border-radius: 8px;
+        background: rgba(0, 0, 0, 0.22);
+        color: var(--muted);
+        font: inherit;
+        font-size: 11px;
+        line-height: 1.2;
+        white-space: nowrap;
+        cursor: pointer;
+        transition: background 0.15s ease, color 0.15s ease;
+      }
+
+      .toast-snooze:hover {
+        background: rgba(0, 0, 0, 0.34);
+        color: var(--text);
+      }
+
+      .toast-close {
+        width: 28px;
+        height: 28px;
+        flex: 0 0 auto;
+        display: grid;
+        place-items: center;
+        padding: 0;
+        border: 0;
+        border-radius: 8px;
+        background: rgba(0, 0, 0, 0.22);
+        color: var(--muted);
+        cursor: pointer;
+        transition: background 0.15s ease, color 0.15s ease;
+      }
+
+      .toast-close svg {
+        width: 14px;
+        height: 14px;
+        stroke: currentColor;
+        stroke-width: 1.8;
+        fill: none;
+        stroke-linecap: round;
+      }
+
+      .toast-close:hover {
+        background: rgba(0, 0, 0, 0.34);
+        color: var(--text);
+      }
+
+      .toast-message {
+        margin: 0;
+        color: var(--text);
+        font-size: 13px;
+        line-height: 1.55;
+        white-space: pre-wrap;
+      }
+
+      .toast-meta-panel {
+        display: none;
+        padding: 10px 12px;
+        border-radius: 12px;
+        background: var(--meta-bg);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+      }
+
+      .toast-meta-panel.is-visible {
+        display: block;
+      }
+
+      .toast-meta-label {
+        margin: 0 0 8px;
+        color: var(--muted);
+        font-size: 11px;
+      }
+
+      .toast-water-cups {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .toast-water-cup {
+        width: 22px;
+        height: 28px;
+        position: relative;
+        border: 1.5px solid rgba(255, 255, 255, 0.18);
+        border-radius: 4px 4px 8px 8px;
+        overflow: hidden;
+        background: rgba(255, 255, 255, 0.04);
+      }
+
+      .toast-water-cup::before {
+        content: "";
+        position: absolute;
+        left: 50%;
+        top: -4px;
+        width: 10px;
+        height: 4px;
+        transform: translateX(-50%);
+        border: 1.5px solid rgba(255, 255, 255, 0.18);
+        border-bottom: 0;
+        border-radius: 3px 3px 0 0;
+      }
+
+      .toast-water-cup-fill {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 0;
+        background: linear-gradient(180deg, var(--accent-strong), var(--accent));
+        transition: height 0.2s ease;
+      }
+
+      .toast-water-cup.is-filled .toast-water-cup-fill {
+        height: 100%;
+      }
+
+      .toast-water-progress-text {
+        margin: 8px 0 0;
+        color: var(--badge-color);
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .toast-punch-clock {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .toast-punch-clock-face {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        border: 2px solid rgba(255, 255, 255, 0.18);
+        position: relative;
+        background: rgba(0, 0, 0, 0.18);
+        flex: 0 0 auto;
+      }
+
+      .toast-punch-clock-face::before,
+      .toast-punch-clock-face::after {
+        content: "";
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform-origin: bottom center;
+        background: var(--accent-strong);
+        border-radius: 999px;
+      }
+
+      .toast-punch-clock-face::before {
+        width: 2px;
+        height: 12px;
+        transform: translate(-50%, -100%) rotate(0deg);
+      }
+
+      .toast-punch-clock-face::after {
+        width: 2px;
+        height: 9px;
+        transform: translate(-50%, -100%) rotate(90deg);
+      }
+
+      .toast-punch-clock-text {
+        margin: 0;
+        color: var(--text);
+        font-size: 13px;
+        font-weight: 700;
+        line-height: 1.4;
+      }
+
+      .toast-toilet-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .toast-toilet-tag {
+        display: inline-flex;
+        align-items: center;
+        padding: 4px 10px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.06);
+        color: var(--text);
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .toast-detail {
+        margin: 0;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.5;
+        white-space: pre-wrap;
+      }
+
+      .toast-footer {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 8px;
+        flex-wrap: wrap;
+        padding: 0 14px 12px;
+      }
+
+      .toast-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: flex-end;
+        width: 100%;
+      }
+
+      .toast-button {
+        min-width: 84px;
+        padding: 8px 12px;
+        border: 0;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.08);
+        color: var(--text);
+        font: inherit;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease;
+      }
+
+      .toast-button:hover {
+        background: rgba(255, 255, 255, 0.14);
+        transform: translateY(-1px);
+      }
+
+      .toast-button.primary {
+        background: var(--button-primary-bg);
+        color: var(--button-primary-color);
+      }
+
+      .toast-button.primary:hover {
+        background: var(--button-primary-hover);
+      }
+
+      .toast-button.danger:hover {
+        background: var(--danger-soft);
+        color: #fecaca;
+      }
+
+      .theme-punch-morning {
+        --accent: #f59e0b;
+        --accent-strong: #fbbf24;
+        --accent-soft: rgba(245, 158, 11, 0.24);
+        --card-bg: linear-gradient(165deg, #4a3b28 0%, #342a1f 52%, #241e17 100%);
+        --hero-bg: radial-gradient(circle at 18% 24%, rgba(251, 191, 36, 0.34), transparent 60%),
+          linear-gradient(135deg, rgba(245, 158, 11, 0.12), transparent 55%);
+        --hero-glow: rgba(251, 191, 36, 0.16);
+        --hero-icon-bg: rgba(251, 191, 36, 0.18);
+        --hero-icon-color: #fde68a;
+        --badge-bg: rgba(245, 158, 11, 0.18);
+        --badge-color: #fde68a;
+        --button-primary-bg: rgba(245, 158, 11, 0.24);
+        --button-primary-color: #fff7ed;
+        --button-primary-hover: rgba(245, 158, 11, 0.34);
+      }
+
+      .theme-punch-early {
+        --accent: #38bdf8;
+        --accent-strong: #7dd3fc;
+        --accent-soft: rgba(56, 189, 248, 0.22);
+        --card-bg: linear-gradient(165deg, #2f3d52 0%, #243246 52%, #1b2635 100%);
+        --hero-bg: radial-gradient(circle at 18% 24%, rgba(56, 189, 248, 0.28), transparent 58%),
+          linear-gradient(135deg, rgba(244, 114, 182, 0.12), transparent 50%);
+        --hero-glow: rgba(56, 189, 248, 0.14);
+        --hero-icon-bg: rgba(56, 189, 248, 0.18);
+        --hero-icon-color: #bae6fd;
+        --badge-bg: rgba(56, 189, 248, 0.18);
+        --badge-color: #e0f2fe;
+        --button-primary-bg: rgba(56, 189, 248, 0.24);
+        --button-primary-color: #e0f2fe;
+        --button-primary-hover: rgba(56, 189, 248, 0.34);
+      }
+
+      .theme-punch-late {
+        --accent: #a78bfa;
+        --accent-strong: #c4b5fd;
+        --accent-soft: rgba(167, 139, 250, 0.22);
+        --card-bg: linear-gradient(165deg, #352f52 0%, #27223d 52%, #1b1828 100%);
+        --hero-bg: radial-gradient(circle at 18% 24%, rgba(167, 139, 250, 0.3), transparent 58%),
+          linear-gradient(135deg, rgba(99, 102, 241, 0.14), transparent 55%);
+        --hero-glow: rgba(167, 139, 250, 0.14);
+        --hero-icon-bg: rgba(167, 139, 250, 0.18);
+        --hero-icon-color: #ddd6fe;
+        --badge-bg: rgba(167, 139, 250, 0.18);
+        --badge-color: #ede9fe;
+        --button-primary-bg: rgba(167, 139, 250, 0.24);
+        --button-primary-color: #ede9fe;
+        --button-primary-hover: rgba(167, 139, 250, 0.34);
+      }
+
+      .theme-water {
+        --accent: #22d3ee;
+        --accent-strong: #67e8f9;
+        --accent-soft: rgba(34, 211, 238, 0.22);
+        --card-bg: linear-gradient(165deg, #1f4450 0%, #183640 52%, #122930 100%);
+        --hero-bg: radial-gradient(circle at 18% 24%, rgba(34, 211, 238, 0.28), transparent 58%),
+          linear-gradient(180deg, rgba(14, 165, 233, 0.12), transparent 60%);
+        --hero-glow: rgba(34, 211, 238, 0.14);
+        --hero-icon-bg: rgba(34, 211, 238, 0.18);
+        --hero-icon-color: #a5f3fc;
+        --badge-bg: rgba(34, 211, 238, 0.18);
+        --badge-color: #cffafe;
+        --meta-bg: rgba(8, 47, 73, 0.42);
+        --button-primary-bg: rgba(34, 211, 238, 0.24);
+        --button-primary-color: #ecfeff;
+        --button-primary-hover: rgba(34, 211, 238, 0.34);
+      }
+
+      .theme-water .toast-hero::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 8px;
+        background: linear-gradient(
+          90deg,
+          transparent 0%,
+          rgba(34, 211, 238, 0.18) 20%,
+          rgba(34, 211, 238, 0.28) 50%,
+          rgba(34, 211, 238, 0.18) 80%,
+          transparent 100%
+        );
+        opacity: 0.8;
+      }
+
+      .theme-toilet-bowel {
+        --accent: #d97706;
+        --accent-strong: #f59e0b;
+        --accent-soft: rgba(217, 119, 6, 0.22);
+        --card-bg: linear-gradient(165deg, #4a3728 0%, #35261c 52%, #241a14 100%);
+        --hero-bg: radial-gradient(circle at 18% 24%, rgba(245, 158, 11, 0.22), transparent 58%),
+          linear-gradient(135deg, rgba(180, 83, 9, 0.14), transparent 55%);
+        --hero-glow: rgba(245, 158, 11, 0.12);
+        --hero-icon-bg: rgba(180, 83, 9, 0.22);
+        --hero-icon-color: #fcd34d;
+        --badge-bg: rgba(180, 83, 9, 0.22);
+        --badge-color: #fde68a;
+        --meta-bg: rgba(69, 26, 3, 0.28);
+        --button-primary-bg: rgba(217, 119, 6, 0.24);
+        --button-primary-color: #fff7ed;
+        --button-primary-hover: rgba(217, 119, 6, 0.34);
+      }
+
+      .theme-toilet-urination {
+        --accent: #60a5fa;
+        --accent-strong: #93c5fd;
+        --accent-soft: rgba(96, 165, 250, 0.22);
+        --card-bg: linear-gradient(165deg, #2a3f58 0%, #213246 52%, #182636 100%);
+        --hero-bg: radial-gradient(circle at 18% 24%, rgba(96, 165, 250, 0.28), transparent 58%),
+          linear-gradient(135deg, rgba(14, 165, 233, 0.12), transparent 55%);
+        --hero-glow: rgba(96, 165, 250, 0.14);
+        --hero-icon-bg: rgba(96, 165, 250, 0.18);
+        --hero-icon-color: #bfdbfe;
+        --badge-bg: rgba(96, 165, 250, 0.18);
+        --badge-color: #dbeafe;
+        --meta-bg: rgba(30, 58, 138, 0.24);
+        --button-primary-bg: rgba(96, 165, 250, 0.24);
+        --button-primary-color: #eff6ff;
+        --button-primary-hover: rgba(96, 165, 250, 0.34);
+      }
+
+      .theme-task {
+        --accent: #818cf8;
+        --accent-strong: #a5b4fc;
+        --card-bg: linear-gradient(165deg, #353a52 0%, #282d40 52%, #1f2331 100%);
+        --hero-bg: radial-gradient(circle at 18% 24%, rgba(129, 140, 248, 0.28), transparent 58%);
+        --hero-glow: rgba(129, 140, 248, 0.14);
+        --hero-icon-bg: rgba(129, 140, 248, 0.18);
+        --hero-icon-color: #c7d2fe;
+        --badge-bg: rgba(129, 140, 248, 0.18);
+        --badge-color: #e0e7ff;
+        --button-primary-bg: rgba(129, 140, 248, 0.24);
+        --button-primary-color: #eef2ff;
+        --button-primary-hover: rgba(129, 140, 248, 0.34);
+      }
+    </style>
+  </head>
+  <body>
+    <article id="card" class="toast-card">
+      <div class="toast-header-actions">
+        <button id="snooze-btn" type="button" class="toast-snooze">今日不再提醒</button>
+        <button id="close-btn" type="button" class="toast-close" aria-label="关闭">
+          <svg viewBox="0 0 12 12">
+            <path d="M3 3l6 6M9 3 3 9" />
+          </svg>
+        </button>
+      </div>
+
+      <section class="toast-hero">
+        <div id="hero-icon" class="toast-hero-icon" aria-hidden="true"></div>
+        <div class="toast-hero-copy">
+          <span id="badge" class="toast-badge"></span>
+          <h1 id="title" class="toast-hero-title"></h1>
+          <p id="hero-time" class="toast-hero-time"></p>
+        </div>
+      </section>
+
+      <section class="toast-main">
+        <p id="message" class="toast-message"></p>
+
+        <div id="meta-panel" class="toast-meta-panel">
+          <p id="meta-label" class="toast-meta-label"></p>
+          <div id="meta-content"></div>
+        </div>
+
+        <p id="detail" class="toast-detail"></p>
+      </section>
+
+      <footer class="toast-footer">
+        <div id="actions" class="toast-actions"></div>
+      </footer>
+    </article>
+
+    <script>
+      const cardEl = document.getElementById('card');
+      const heroIconEl = document.getElementById('hero-icon');
+      const badgeEl = document.getElementById('badge');
+      const titleEl = document.getElementById('title');
+      const heroTimeEl = document.getElementById('hero-time');
+      const messageEl = document.getElementById('message');
+      const detailEl = document.getElementById('detail');
+      const metaPanelEl = document.getElementById('meta-panel');
+      const metaLabelEl = document.getElementById('meta-label');
+      const metaContentEl = document.getElementById('meta-content');
+      const actionsEl = document.getElementById('actions');
+      const closeBtn = document.getElementById('close-btn');
+      const snoozeBtn = document.getElementById('snooze-btn');
+
+      const ICONS = {
+        'punch-morning':
+          '<svg viewBox="0 0 24 24"><path d="M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10Zm0-5a1 1 0 0 1 1 1v1.07A7.001 7.001 0 0 1 19.93 11H21a1 1 0 1 1 0 2h-1.07A7.001 7.001 0 0 1 13 19.93V21a1 1 0 1 1-2 0v-1.07A7.001 7.001 0 0 1 4.07 13H3a1 1 0 1 1 0-2h1.07A7.001 7.001 0 0 1 11 4.07V3a1 1 0 0 1 1-1Z"/></svg>',
+        'punch-early':
+          '<svg viewBox="0 0 24 24"><path d="M12 2a1 1 0 0 1 1 1v1.17A7 7 0 0 1 19.83 11H21a1 1 0 0 1 0 2h-1.17A7 7 0 0 1 13 19.83V21a1 1 0 0 1-2 0v-1.17A7 7 0 0 1 4.17 13H3a1 1 0 0 1 0-2h1.17A7 7 0 0 1 11 4.17V3a1 1 0 0 1 1-1Zm0 4a5 5 0 1 0 0 10 5 5 0 0 0 0-10Z"/></svg>',
+        'punch-late':
+          '<svg viewBox="0 0 24 24"><path d="M12 2a1 1 0 0 1 1 1v1.17A7 7 0 0 1 19.83 11H21a1 1 0 0 1 0 2h-1.17A7 7 0 0 1 13 19.83V21a1 1 0 0 1-2 0v-1.17A7 7 0 0 1 4.17 13H3a1 1 0 0 1 0-2h1.17A7 7 0 0 1 11 4.17V3a1 1 0 0 1 1-1Zm0 4a5 5 0 1 0 0 10 5 5 0 0 0 0-10Zm-1 4a1 1 0 0 1 1.8-.6l2.2 1.65a1 1 0 0 1 .2 1.4l-.2.25a1 1 0 0 1-1.4.2l-2.2-1.65A1 1 0 0 1 11 10Z"/></svg>',
+        water:
+          '<svg viewBox="0 0 24 24"><path d="M12 2.5c3.2 4.2 6 7.4 6 11a6 6 0 1 1-12 0c0-3.6 2.8-6.8 6-11Z"/></svg>',
+        'toilet-bowel':
+          '<svg viewBox="0 0 24 24"><path d="M7 4h10a2 2 0 0 1 2 2v2H5V6a2 2 0 0 1 2-2Zm-2 6h14v2a6 6 0 0 1-5 5.92V20h3a1 1 0 1 1 0 2H7a1 1 0 1 1 0-2h3v-2.08A6 6 0 0 1 5 12v-2Z"/></svg>',
+        'toilet-urination':
+          '<svg viewBox="0 0 24 24"><path d="M12 2.5c2.2 2.9 4.5 5.3 4.5 8a4.5 4.5 0 1 1-9 0c0-2.7 2.3-5.1 4.5-8ZM8 18h8a2 2 0 0 1 0 4H8a2 2 0 0 1 0-4Z"/></svg>',
+        task:
+          '<svg viewBox="0 0 24 24"><path d="M9 11.5 6.5 9 5 10.5l4 4 9-9L16.5 5 9 11.5Z"/></svg>',
+        default:
+          '<svg viewBox="0 0 24 24"><path d="M12 2 1 21h22L12 2Zm0 4.5 6.5 12.5H5.5L12 6.5ZM11 10v5h2v-5h-2Zm0 6v2h2v-2h-2Z"/></svg>',
+      };
+
+      const THEME_LABELS = {
+        'punch-morning': '上班打卡',
+        'punch-early': '下班打卡',
+        'punch-late': '绩效打卡',
+        water: '喝水提醒',
+        'toilet-bowel': '大便提醒',
+        'toilet-urination': '小便提醒',
+        task: '任务提醒',
+        default: '系统提醒',
+      };
+
+      closeBtn.addEventListener('click', () => {
+        window.toastAPI.respond('close');
+      });
+
+      snoozeBtn.addEventListener('click', () => {
+        window.toastAPI.respond('snooze-today');
+      });
+
+      const splitBody = (body) => {
+        const text = String(body || '').trim();
+        if (!text) {
+          return { message: '', detail: '' };
+        }
+
+        const parts = text.split('\n\n');
+        return {
+          message: parts[0] || '',
+          detail: parts.slice(1).join('\n\n').trim(),
+        };
+      };
+
+      const renderWaterMeta = (progress) => {
+        const current = Math.max(0, Number(progress.current || 0));
+        const total = Math.max(1, Number(progress.total || 8));
+        const cups = Array.from({ length: total }, (_, index) => {
+          const filled = index < current ? ' is-filled' : '';
+          return `<span class="toast-water-cup${filled}"><span class="toast-water-cup-fill"></span></span>`;
+        }).join('');
+
+        metaLabelEl.textContent = '今日饮水进度';
+        metaContentEl.innerHTML = `
+          <div class="toast-water-cups">${cups}</div>
+          <p class="toast-water-progress-text">已喝 ${current} / ${total} ${progress.unit || '杯'}</p>
+        `;
+        metaPanelEl.classList.add('is-visible');
+      };
+
+      const renderPunchMeta = (meta) => {
+        const displayTime = meta.punchTime || meta.time || '现在';
+        metaLabelEl.textContent = meta.punchTime ? '建议打卡时间' : '提醒时间';
+        metaContentEl.innerHTML = `
+          <div class="toast-punch-clock">
+            <div class="toast-punch-clock-face" aria-hidden="true"></div>
+            <p class="toast-punch-clock-text">${displayTime}</p>
+          </div>
+        `;
+        metaPanelEl.classList.add('is-visible');
+      };
+
+      const renderToiletMeta = (meta) => {
+        const tags = [];
+        if (meta.period) {
+          tags.push(`<span class="toast-toilet-tag">${meta.period}</span>`);
+        }
+        if (meta.time) {
+          tags.push(`<span class="toast-toilet-tag">${meta.time}</span>`);
+        }
+
+        metaLabelEl.textContent = '提醒时段';
+        metaContentEl.innerHTML = `<div class="toast-toilet-tags">${tags.join('')}</div>`;
+        metaPanelEl.classList.add('is-visible');
+      };
+
+      const renderMeta = (theme, meta = {}) => {
+        metaPanelEl.classList.remove('is-visible');
+        metaLabelEl.textContent = '';
+        metaContentEl.innerHTML = '';
+
+        if (theme === 'water' && meta.progress) {
+          renderWaterMeta(meta.progress);
+          return;
+        }
+
+        if (theme.startsWith('punch-') && (meta.punchTime || meta.time)) {
+          renderPunchMeta(meta);
+          return;
+        }
+
+        if (theme.startsWith('toilet-') && (meta.period || meta.time)) {
+          renderToiletMeta(meta);
+        }
+      };
+
+      const renderToast = ({ title, body, buttons, theme = 'default', meta = {} }) => {
+        const resolvedTheme = theme || 'default';
+        cardEl.className = `toast-card theme-${resolvedTheme}`;
+
+        const iconKey = ICONS[resolvedTheme] ? resolvedTheme : 'default';
+        heroIconEl.innerHTML = ICONS[iconKey];
+
+        badgeEl.textContent = THEME_LABELS[resolvedTheme] || THEME_LABELS.default;
+        titleEl.textContent = title || '提醒';
+        heroTimeEl.textContent = meta.time || meta.scheduledLabel || '';
+
+        const { message, detail } = splitBody(body);
+        messageEl.textContent = message;
+        detailEl.textContent = detail;
+        detailEl.style.display = detail ? 'block' : 'none';
+
+        renderMeta(resolvedTheme, meta);
+
+        actionsEl.innerHTML = '';
+        buttons.forEach((label, index) => {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'toast-button';
+          button.textContent = label;
+
+          if (index === 0) {
+            button.classList.add('primary');
+          } else if (index === buttons.length - 1 && buttons.length > 1) {
+            button.classList.add('danger');
+          }
+
+          button.addEventListener('click', () => {
+            window.toastAPI.respond(index);
+          });
+
+          actionsEl.appendChild(button);
+        });
+      };
+
+      window.toastAPI.onInit(renderToast);
+    </script>
+  </body>
+</html>

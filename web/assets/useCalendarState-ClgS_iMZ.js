@@ -1,0 +1,1 @@
+import{dt as e}from"./runtime-core.esm-bundler-GUbWTbjV.js";import{n as t}from"./workCalendar-DBM1_fWz.js";var n=e(new Date().getFullYear()===t?new Date().getMonth():0);function r(){return{selectedMonth:n,setMonth:e=>{let t=n.value+e;t<0||t>11||(n.value=t)},goToMonth:e=>{e>=0&&e<=11&&(n.value=e)}}}export{r as t};
